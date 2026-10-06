@@ -15,7 +15,7 @@ int GetCommandFromLine(const char *const line, Instruction *const inst)
 
     fprintf(stderr, "DEBUG: GetCommandFromLine(): line = <%s>\n", line);
     int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
-    inst->argsAmount = 1;
+    inst->argsAmount = itemsParsed - 1;
 
     inst->code = InstructionNameToHash(instName); // FIXME Replace hash with code
     return itemsParsed;
@@ -86,7 +86,15 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
 
     DumpInstruction(inst);
 
-    sprintf(buf, "0x%x %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
+    if (inst->argsAmount == 0)
+    {
+        sprintf(buf, "0x%x\n", inst->code); // FIXME HARDCODED!!!
+    }
+    else if (inst->argsAmount == 1)
+    {
+        sprintf(buf, "0x%x %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
+    }
+
     fprintf(stderr, "DEBUG: WriteInstructionToFile(): buf = <%s>", buf);
     if (write(fd, buf, sizeof(char) * strlen(buf)) == -1)
     {
