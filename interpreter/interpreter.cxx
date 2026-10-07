@@ -15,7 +15,7 @@ int GetCommandFromLine(const char *const line, Instruction *const inst)
 
     fprintf(stderr, "DEBUG: GetCommandFromLine(): line = <%s>\n", line);
     int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
-    inst->argsAmount = itemsParsed - 1;
+    inst->argsAmount = (unsigned)(itemsParsed - 1);
 
     inst->code = InstructionNameToHash(instName); // FIXME Replace hash with code
     return itemsParsed;
@@ -40,7 +40,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
     size_t lineCount = 1;
     Instruction inst = {};
 
-    while ((nextLinePos - inputBuf) < inputBufSize)
+    while ((unsigned)(nextLinePos - inputBuf) < inputBufSize)
     {
         nextLinePos = prevLinePos + strlen(prevLinePos);
         // fprintf(stderr,

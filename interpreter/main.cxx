@@ -1,5 +1,6 @@
 #include "../h/errorHandle.h"
 #include "../h/interpreter/input.h"
+#include "../h/interpreter/instTable.h"
 #include "../h/interpreter/interpreter.h"
 #include <cerrno>
 #include <cstddef>
@@ -11,6 +12,14 @@
 int main(int argc, char *argv[])
 {
     Error error = CreateSuccess();
+
+    InstructionTable table = {};
+    RETURN_EXITCODE_IF_FAIL(error = HandleError(CreateInstructionTable(16, &table)));
+    RETURN_EXITCODE_IF_FAIL(error = HandleError(AddInstruction(&table, InstructionNameToHash("PUSH"), 1)));
+    fprintf(stderr,
+            "DEBUG: main(): code of instruction <PUSH>: %u\n",
+            GetInstruction(&table, InstructionNameToHash("PUSH"))->code);
+
     size_t inputFileSize = 0;
     if (argc != 2)
     {
@@ -46,5 +55,6 @@ int main(int argc, char *argv[])
     free(textBuf);
     close(inputFileDescriptor);
     close(outputFileDescriptor);
+    DestroyInstructionTable(&table);
     return ecSuccess;
 }
