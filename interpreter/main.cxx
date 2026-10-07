@@ -14,11 +14,11 @@ int main(int argc, char *argv[])
     Error error = CreateSuccess();
 
     InstructionTable table = {};
-    RETURN_EXITCODE_IF_FAIL(error = HandleError(CreateInstructionTable(16, &table)));
-    RETURN_EXITCODE_IF_FAIL(error = HandleError(AddInstruction(&table, InstructionNameToHash("PUSH"), 1)));
+    RETURN_EXITCODE_IF_FAIL(error = HandleError(CreateInstructionTable(1, &table)));
+    RETURN_EXITCODE_IF_FAIL(error = HandleError(LoadInstrucitonTableFromFile(&table, "reference")));
     fprintf(stderr,
-            "DEBUG: main(): code of instruction <PUSH>: %u\n",
-            GetInstruction(&table, InstructionNameToHash("PUSH"))->code);
+            "DEBUG: main(): code of instruction <ADD>: %u\n",
+            GetInstruction(&table, InstructionNameToHash("ADD"))->code);
 
     size_t inputFileSize = 0;
     if (argc != 2)
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     RETURN_EXITCODE_IF_FAIL(HandleError(error = LoadText(inputFileDescriptor, textBuf, inputFileSize)));
     RETURN_EXITCODE_IF_FAIL(
-        HandleError(error = CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor)));
+        HandleError(error = CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &table)));
 
     free(textBuf);
     close(inputFileDescriptor);

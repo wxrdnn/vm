@@ -1,13 +1,15 @@
 #include "../h/interpreter/interpreter.h"
 #include "../h/debug.h"
 #include "../h/errorHandle.h"
+#include "../h/interpreter/instTable.h"
+#include "../h/utils.h"
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
 
-int GetCommandFromLine(const char *const line, Instruction *const inst)
+int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table)
 {
     ASSERT(line);
 
@@ -15,9 +17,16 @@ int GetCommandFromLine(const char *const line, Instruction *const inst)
 
     fprintf(stderr, "DEBUG: GetCommandFromLine(): line = <%s>\n", line);
     int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
-    inst->argsAmount = (unsigned)(itemsParsed - 1);
 
-    inst->code = InstructionNameToHash(instName); // FIXME Replace hash with code
+    InstructionNode *foundInstruction = GetInstruction(table, InstructionNameToHash(instName));
+    if (!foundInstruction)
+    {
+        fprintf(stderr, "ERROR: No \"%s\" instruction found in instruction table!\n", instName);
+        return 0;
+    }
+
+    inst->argsAmount = (unsigned)(itemsParsed - 1);
+    inst->code = foundInstruction->code;
     return itemsParsed;
 }
 
@@ -29,7 +38,7 @@ unsigned InstructionNameToHash(const char *const instructionName)
 }
 
 Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
-                       const int outputFileDescriptor)
+                       const int outputFileDescriptor, const InstructionTable *const table)
 {
     ASSERT(inputBuf);
     ASSERT(inputFileName);
@@ -49,7 +58,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
         //         nextLinePos - textBuf,
         //         textBufSize);
 
-        int itemsParsed = GetCommandFromLine(prevLinePos, &inst);
+        int itemsParsed = GetCommandFromLine(prevLinePos, &inst, table);
         if (itemsParsed > 2)
         {
             error.exitCode = ecParsingFailed;
@@ -88,11 +97,11 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
 
     if (inst->argsAmount == 0)
     {
-        sprintf(buf, "0x%x\n", inst->code); // FIXME HARDCODED!!!
+        sprintf(buf, "%X\n", inst->code); // FIXME HARDCODED!!!
     }
     else if (inst->argsAmount == 1)
     {
-        sprintf(buf, "0x%x %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
+        sprintf(buf, "%X %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
     }
 
     fprintf(stderr, "DEBUG: WriteInstructionToFile(): buf = <%s>", buf);

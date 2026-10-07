@@ -38,6 +38,10 @@ InstructionNode *GetInstruction(const InstructionTable *const table, const unsig
         {
             return currentNode;
         }
+        else if (!currentNode->next)
+        {
+            return NULL;
+        }
         else
         {
             currentNode = currentNode->next;

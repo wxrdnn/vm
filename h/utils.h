@@ -20,4 +20,6 @@ void ClearBuffer();
 
 bool FileIsEmpty(FILE *const fp);
 
+#define ARG_NAME_TO_STR(__x) #__x
+
 #endif
