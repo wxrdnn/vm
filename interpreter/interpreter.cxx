@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <unistd.h>
 
@@ -15,7 +16,7 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
 
     char instName[cMaxLine] = {};
 
-    fprintf(stderr, __YELLOW "DEBUG: GetCommandFromLine(): line = <%s>\n" __RESET, line);
+    fprintf(stderr, __YELLOW "DEBUG: GetCommandFromLine(): Got line <%s>\n" __RESET, line);
     int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
 
     if (*instName == '\0')
@@ -115,7 +116,11 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
         sprintf(buf, "%u %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
     }
 
-    fprintf(stderr, __YELLOW "DEBUG: WriteInstructionToFile(): buf = <%s>" __RESET, buf);
+    char *debugBuf = strdup(buf);
+    ReplaceNewLineCharWithNullTerminator(debugBuf);
+    fprintf(stderr, __YELLOW "DEBUG: WriteInstructionToFile(): Writing <%s> to output file\n" __RESET, debugBuf);
+    free(debugBuf);
+
     if (write(fd, buf, sizeof(char) * strlen(buf)) == -1)
     {
         error = CreateError(TranslateErrnoCode(errno), "");
