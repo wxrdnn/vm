@@ -16,6 +16,6 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
 
 Error WriteInstructionToFile(const Instruction *const inst, const int fd);
 
-void DumpInstruction(const Instruction *const inst);
+// void DumpInstruction(const Instruction *const inst);
 
 #endif

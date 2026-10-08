@@ -1,4 +1,5 @@
+HLT 0
 PUSH 1
 ADD 2
 SUB 3
-HLT 0
+OUT 4

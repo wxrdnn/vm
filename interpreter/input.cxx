@@ -37,7 +37,7 @@ Error LoadText(const int fd, char *const textBuf, const size_t fileSize) // need
         return error;
     }
 
-    fprintf(stderr, "DEBUG: fileSize = %lu\n", fileSize);
+    // fprintf(stderr, "DEBUG: fileSize = %lu\n", fileSize);
     textBuf[fileSize - 1] = '\0';
     ReplaceAllNewLineCharWithNullTerminator(textBuf);
 
@@ -90,7 +90,8 @@ Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *co
         if (itemsRead != 2 && *buf != '\0')
         {
             fprintf(stderr,
-                    "ERROR: Failed to parse instruction \"%s\" from %s:%u. Items read = %d\n",
+                    __RED "ERROR: Failed to parse instruction \"%s\" from %s:%u. Items read = %d, expected: "
+                          "<INSTRUCTION> <CODE>\n" __RESET,
                     buf,
                     filePath,
                     lineCount,

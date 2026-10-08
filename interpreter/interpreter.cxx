@@ -15,13 +15,17 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
 
     char instName[cMaxLine] = {};
 
-    fprintf(stderr, "DEBUG: GetCommandFromLine(): line = <%s>\n", line);
+    fprintf(stderr, __YELLOW "DEBUG: GetCommandFromLine(): line = <%s>\n" __RESET, line);
     int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
 
+    if (*instName == '\0')
+    {
+        return EOF;
+    }
     InstructionNode *foundInstruction = GetInstruction(table, InstructionNameToHash(instName));
     if (!foundInstruction)
     {
-        fprintf(stderr, "ERROR: No \"%s\" instruction found in instruction table!\n", instName);
+        fprintf(stderr, __RED "ERROR: No \"%s\" instruction found in instruction table!\n" __RESET, instName);
         return 0;
     }
 
@@ -59,15 +63,24 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
         //         textBufSize);
 
         int itemsParsed = GetCommandFromLine(prevLinePos, &inst, table);
-        if (itemsParsed > 2)
+        if (itemsParsed == EOF)
+        {
+            return error;
+        }
+        if (itemsParsed != inst.argsAmount + 1)
         {
             error.exitCode = ecParsingFailed;
-            fprintf(stderr, "ERROR: Failed to parse \"%s\" at %s:%lu.\n", prevLinePos, inputFileName, lineCount);
+            fprintf(stderr,
+                    __RED "ERROR: Failed to parse \"%s\" at %s:%lu.\n" __RESET,
+                    prevLinePos,
+                    inputFileName,
+                    lineCount);
             strncpy(error.context, prevLinePos, cMaxLine - 1);
             return error;
         }
 
-        fprintf(stderr, "DEBUG: prevLinePos = <%s>, first char = <%d>\n", prevLinePos, *prevLinePos);
+        // fprintf(stderr, __YELLOW "DEBUG: prevLinePos = <%s>, first char = <%d>\n" __RESET, prevLinePos,
+        // *prevLinePos);
 
         if (*prevLinePos != '\0')
         {
@@ -93,18 +106,16 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
     Error error = CreateSuccess();
     char buf[cMaxLine] = {};
 
-    DumpInstruction(inst);
-
     if (inst->argsAmount == 0)
     {
-        sprintf(buf, "%X\n", inst->code); // FIXME HARDCODED!!!
+        sprintf(buf, "%u\n", inst->code); // FIXME HARDCODED!!!
     }
     else if (inst->argsAmount == 1)
     {
-        sprintf(buf, "%X %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
+        sprintf(buf, "%u %u\n", inst->code, inst->args[0]); // FIXME HARDCODED!!!
     }
 
-    fprintf(stderr, "DEBUG: WriteInstructionToFile(): buf = <%s>", buf);
+    fprintf(stderr, __YELLOW "DEBUG: WriteInstructionToFile(): buf = <%s>" __RESET, buf);
     if (write(fd, buf, sizeof(char) * strlen(buf)) == -1)
     {
         error = CreateError(TranslateErrnoCode(errno), "");
@@ -114,19 +125,11 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
     return error;
 }
 
-void DumpInstruction(const Instruction *const inst)
-{
-    ASSERT(inst);
-
-    fprintf(stderr, "DEBUG: inst.code = %u\n", inst->code); // TODO Expand
-
-    return;
-}
-
-// unsigned InstructionHashToCode(const unsigned hash)
+// void DumpInstruction(const Instruction *const inst)
 // {
-//     switch (hash)
-//     {
-//     case InstructionNameToHash("PUSH"):
-//     }
+//     ASSERT(inst);
+//
+//     // fprintf(stderr, "DEBUG: inst.code = %u\n", inst->code); // TODO Expand
+//
+//     return;
 // }

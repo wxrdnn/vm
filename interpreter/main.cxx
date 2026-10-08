@@ -1,3 +1,4 @@
+#include "../h/colors.h"
 #include "../h/errorHandle.h"
 #include "../h/interpreter/input.h"
 #include "../h/interpreter/instTable.h"
@@ -16,14 +17,14 @@ int main(int argc, char *argv[])
     InstructionTable table = {};
     RETURN_EXITCODE_IF_FAIL(error = HandleError(CreateInstructionTable(1, &table)));
     RETURN_EXITCODE_IF_FAIL(error = HandleError(LoadInstrucitonTableFromFile(&table, "reference")));
-    fprintf(stderr,
-            "DEBUG: main(): code of instruction <ADD>: %u\n",
-            GetInstruction(&table, InstructionNameToHash("ADD"))->code);
+    // fprintf(stderr,
+    //         "DEBUG: main(): code of instruction <ADD>: %u\n",
+    //         GetInstruction(&table, InstructionNameToHash("ADD"))->code);
 
     size_t inputFileSize = 0;
     if (argc != 2)
     {
-        printf("ERROR: Wrong input.\nUsage: %s [INPUT]\n", argv[0]);
+        printf(__RED "ERROR: Wrong input.\n" __BLUE "Usage: %s [INPUT]\n" __RESET, argv[0]);
         return ecWrongUsage;
     }
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     }
 
     RETURN_EXITCODE_IF_FAIL(error = GetFileSize(argv[1], &inputFileSize));
-    printf("DEBUG: Input file size: %lu\n", inputFileSize);
+    // printf("DEBUG: Input file size: %lu\n", inputFileSize);
 
     char *textBuf = NULL;
     RETURN_EXITCODE_IF_FAIL(error = CreateTextBuf(inputFileSize + 1, &textBuf)); // FIXME MAGIC NUMBER
