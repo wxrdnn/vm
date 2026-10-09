@@ -54,7 +54,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
     size_t lineCount = 1;
     Instruction inst = {};
 
-    while ((unsigned)(nextLinePos - inputBuf) < inputBufSize)
+    while ((unsigned)(nextLinePos - inputBuf) < inputBufSize - 1)
     {
         nextLinePos = prevLinePos + strlen(prevLinePos);
         // fprintf(stderr,
