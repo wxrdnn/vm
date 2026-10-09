@@ -74,3 +74,35 @@ bool FileIsEmpty(FILE *const fp)
     ungetc(c, fp);
     return false;
 }
+
+void DumpIntArr(const int *const arr, const size_t size)
+{
+    fprintf(stderr, "DEBUG: Array dump: [");
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        fprintf(stderr, "%d", arr[i]);
+        if (i < size - 1)
+        {
+            fprintf(stderr, ", ");
+        }
+    }
+
+    fprintf(stderr, "]\n");
+}
+
+void DumpUnsignedIntArr(const unsigned *const arr, const size_t size)
+{
+    fprintf(stderr, "DEBUG: Array dump: [");
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        fprintf(stderr, "%u", arr[i]);
+        if (i < size - 1)
+        {
+            fprintf(stderr, ", ");
+        }
+    }
+
+    fprintf(stderr, "]\n");
+}

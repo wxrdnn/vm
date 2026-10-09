@@ -20,6 +20,10 @@ void ClearBuffer();
 
 bool FileIsEmpty(FILE *const fp);
 
+void DumpIntArr(const int *const arr, const size_t size);
+
+void DumpUnsignedIntArr(const unsigned *const arr, const size_t size);
+
 #define ARG_NAME_TO_STR(__x) #__x
 
 #endif

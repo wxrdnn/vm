@@ -78,5 +78,13 @@ Error CreateSuccess();
             return __code;                                                                                             \
         }                                                                                                              \
     }
+#define RETURN_ERROR_IF_FAIL(__error)                                                                                  \
+    {                                                                                                                  \
+        Error _err = __error;                                                                                          \
+        if ((_err).exitCode != ecSuccess)                                                                              \
+        {                                                                                                              \
+            return (_err);                                                                                             \
+        }                                                                                                              \
+    }
 
 #endif

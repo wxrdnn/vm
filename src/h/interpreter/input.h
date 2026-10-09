@@ -1,6 +1,6 @@
-#ifndef INPUT_H
+#ifndef INTERPRETER_INPUT_H
 
-#define INPUT_H
+#define INTERPRETER_INPUT_H
 
 #include "../errorHandle.h"
 #include "../types.h"
