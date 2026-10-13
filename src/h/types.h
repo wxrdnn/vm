@@ -4,11 +4,12 @@
 
 #include "constants.h"
 
+typedef unsigned char byte_t;
 typedef unsigned InstructionArg_t;
 
 struct Instruction
 {
-    unsigned code;
+    byte_t code;
     InstructionArg_t args[cMaxInstructionArgs];
     unsigned argsAmount;
 };

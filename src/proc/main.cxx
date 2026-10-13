@@ -1,14 +1,20 @@
 #include "../h/proc/input.h"
+#include "../h/proc/output.h"
+#include "../h/proc/proc.h"
 #include "../h/textio.h"
-#include "../h/utils.h"
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
+    // TODO SHUTDOWN macro
+
     Error error = CreateSuccess();
+
+    Processor proc = {};
 
     if (argc != 2)
     {
@@ -25,15 +31,15 @@ int main(int argc, char *argv[])
     }
 
     size_t inputFileSize = 0;
-    error = GetFileSize(argv[1], &inputFileSize);
-    RETURN_EXITCODE_IF_FAIL(error);
+    RETURN_EXITCODE_IF_FAIL(GetFileSize(argv[1], &inputFileSize));
 
-    unsigned *byteCode = (unsigned *)calloc(inputFileSize, sizeof(unsigned));
+    RETURN_EXITCODE_IF_FAIL(InitializeProcessor(&proc, inputFileSize, 64));
 
-    error = LoadByteCode(inputfd, inputFileSize, byteCode, inputFileSize);
-    RETURN_EXITCODE_IF_FAIL(error);
+    RETURN_EXITCODE_IF_FAIL(LoadByteCodeFromBinary(inputfd, inputFileSize, proc.byteCode, inputFileSize));
 
-    DumpUnsignedIntArr(byteCode, inputFileSize);
+    DumpByte_tArrInHex(proc.byteCode, proc.byteCodeSize);
 
+    FreeProcessorData(&proc);
+    close(inputfd);
     return error.exitCode;
 }

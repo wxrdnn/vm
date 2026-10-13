@@ -105,6 +105,28 @@ Error WriteInstructionToFile(const Instruction *const inst, const int fd)
     ASSERT(inst);
 
     Error error = CreateSuccess();
+
+    if (write(fd, &inst->code, sizeof(inst->code)) == -1)
+    {
+        error = CreateError(TranslateErrnoCode(errno), "binary code file");
+        return error;
+    }
+    // fprintf(stderr, "DEBUG: Write <%b> to output with fd %d\n", inst->code, fd);
+
+    if (write(fd, inst->args, sizeof(*inst->args) * inst->argsAmount) == -1)
+    {
+        error = CreateError(TranslateErrnoCode(errno), "binary code file");
+        return error;
+    }
+
+    return error;
+}
+
+Error DumpInstructionToFile(const Instruction *const inst, const int fd)
+{
+    ASSERT(inst);
+
+    Error error = CreateSuccess();
     char buf[cMaxLine] = {};
 
     if (inst->argsAmount == 0)

@@ -1,6 +1,6 @@
+// Write instruction codes in HEX
 HLT 0
 PUSH 1
 ADD 2
 SUB 3
 OUT 4
-//TODO 8 BYTE

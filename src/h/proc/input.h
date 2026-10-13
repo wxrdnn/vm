@@ -3,7 +3,9 @@
 #define PROC_INPUT_H
 
 #include "../errorHandle.h"
+#include "../types.h"
 
-Error LoadByteCode(const int fileDescriptor, const size_t fileSize, unsigned *byteCode, const size_t byteCodeSize);
+Error LoadByteCodeFromBinary(const int fileDescriptor, const size_t fileSize, byte_t *byteCode,
+                             const size_t byteCodeSize);
 
 #endif

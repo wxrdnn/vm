@@ -56,7 +56,7 @@ InstructionNode *GetInstruction(const InstructionTable *const table, const unsig
     return NULL;
 }
 
-Error AddInstruction(InstructionTable *const table, const unsigned hash, const unsigned code)
+Error AddInstruction(InstructionTable *const table, const unsigned hash, const byte_t code)
 {
     ASSERT(table);
 

@@ -25,6 +25,7 @@ enum ExitCode
     ecNotDirectory = 16,
     ecWrongUsage = 17,
     ecCantAllocateMemory = 18,
+    ecNotEnoughSpace = 19,
 };
 
 struct Error

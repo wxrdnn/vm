@@ -43,6 +43,7 @@
 
 int main(int argc, char *argv[])
 {
+    // TODO 8 BYTE
     Error error = CreateSuccess();
 
     InstructionTable table = {};

@@ -39,10 +39,16 @@ Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *co
     unsigned lineCount = 1;
     while (fgets(buf, cMaxLine - 1, fp))
     {
+        if (*buf == '/' && *(buf + 1) == '/')
+        {
+            lineCount++;
+            continue;
+        }
+
         char nameRead[cMaxInstructionNameLength + 1] = {};
         unsigned codeRead = 0;
 
-        int itemsRead = sscanf(buf, "%4s %u", nameRead, &codeRead); // FIXME HARDOCDED
+        int itemsRead = sscanf(buf, "%4s %X", nameRead, &codeRead); // FIXME HARDOCDED
         if (itemsRead != 2 && *buf != '\0')
         {
             fprintf(stderr,

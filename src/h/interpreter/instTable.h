@@ -1,15 +1,16 @@
-#ifndef INSTTABLE_H
+#ifndef INTERPRETER_INSTTABLE_H
 
-#define INSTTABLE_H
+#define INTERPRETER_INSTTABLE_H
 
 #include "../constants.h"
 #include "../errorHandle.h"
+#include "../types.h"
 
 struct InstructionNode
 {
     InstructionNode *next;
     unsigned hash;
-    unsigned code;
+    byte_t code;
 };
 
 struct InstructionTable
@@ -22,7 +23,7 @@ Error CreateInstructionTable(const size_t size, InstructionTable *const tablePtr
 
 InstructionNode *GetInstruction(const InstructionTable *const table, const unsigned hash);
 
-Error AddInstruction(InstructionTable *const tablePtr, const unsigned hash, const unsigned code);
+Error AddInstruction(InstructionTable *const tablePtr, const unsigned hash, const byte_t code);
 
 void DestroyInstructionTable(InstructionTable *const tablePtr);
 
