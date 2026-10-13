@@ -1,11 +1,16 @@
 #include "../h/proc/proc.h"
 #include "../h/proc/instructions.h"
+#include <cerrno>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap)
 {
     ASSERT(proc);
     Error error = CreateSuccess();
+
+    proc->halted = false;
 
     proc->byteCode = (byte_t *)calloc(byteCodeSize, sizeof(byte_t));
     if (!proc->byteCode)
@@ -62,9 +67,67 @@ void FreeProcessorData(Processor *const proc)
     return;
 }
 
-Error RunCommand(Processor *const proc)
+Error RunCommand(Processor *const proc, FILE *input, FILE *output)
 {
+    ASSERT(proc);
+
+    Error error = CreateSuccess();
     ProcessorCommand commandCode = (ProcessorCommand)proc->byteCode[proc->pc]; // cast 1 byte to int
 
-    switch (commandCode) {}
+    Digit_t tmpVar1 = 0;
+    Digit_t tmpVar2 = 0;
+
+    proc->pc++;
+    switch (commandCode)
+    {
+    case pcHLT:
+        proc->halted = true;
+        break;
+
+    case pcPUSH:
+        ASSERT(proc->byteCodeSize > proc->pc + sizeof(Digit_t));
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1));
+        proc->pc += 4;
+        break;
+
+    case pcADD:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar2));
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1 + tmpVar2));
+        break;
+
+    case pcSUB:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar2));
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar2 - tmpVar1));
+        break;
+
+    case pcMUL:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar2));
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1 * tmpVar2));
+        break;
+
+    case pcDIV:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar2));
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1 / tmpVar2));
+        break;
+
+    case pcOUT:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        if (fprintf(output, "%d\n", tmpVar1) < 0) // FIXME hardcoded
+        {
+            error = CreateError(TranslateErrnoCode(errno), "output file");
+            return error;
+        }
+        break;
+
+    default:
+        error = CreateError(ecUnexpectedFailure, "unknown processor instruction");
+        return error;
+    }
+
+    return error;
 }

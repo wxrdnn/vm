@@ -1,5 +1,6 @@
 #include "h/stack.h"
 #include "h/colors.h"
+#include "h/constants.h"
 #include "h/debug.h"
 #include "h/errorHandle.h"
 #include "h/hash.h"
@@ -11,6 +12,7 @@
 
 StackErrorCode _StackVerify(const Stack_t *const stk)
 {
+
     if (!stk)
     {
         STACK_DUMP(stk);
@@ -156,21 +158,29 @@ Error StackPush(Stack_t *const stk, StackElem_t element)
     return error;
 }
 
-StackElem_t StackPop(Stack_t *const stk, Error *const error)
+Error StackPop(Stack_t *const stk, StackElem_t *const poppedElement)
 {
     VERIFY_STACK(stk);
 
-    *error = CreateSuccess();
+    Error error = CreateSuccess();
 
-    // TODO size check before pop
-    StackElem_t poppedElement = stk->data[stk->size--]; // TODO Error handling
+    if (stk->size == 0)
+    {
+        char buf[cMaxLine] = {};
+        sprintf(buf, "Stack error code: %d", secCantPopFromEmptyStack);
+        error = CreateError(ecStackError, buf);
+        return error;
+    }
+    *poppedElement = stk->data[stk->size - 1];
+    stk->data[stk->size - 1] = 0;
+    stk->size--;
 
     // if (stl->capacity / stk->size > cStackCapMultipluer)
     // TODO Shrink if stack is smaller than its 2 extensions
 
     UpdateStackHash(stk);
     VERIFY_STACK(stk);
-    return poppedElement;
+    return error;
 }
 
 void StackFreeData(Stack_t *const stk)

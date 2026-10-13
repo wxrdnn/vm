@@ -8,6 +8,28 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#define SHUTDOWN(__exitCode)                                                                                           \
+    {                                                                                                                  \
+        if (inputfd > 0)                                                                                               \
+        {                                                                                                              \
+            close(inputfd);                                                                                            \
+        }                                                                                                              \
+                                                                                                                       \
+        FreeProcessorData(&proc);                                                                                      \
+                                                                                                                       \
+        return __exitCode;                                                                                             \
+    }
+
+#define SHUTDOWN_IF_ERROR_FAIL(__error)                                                                                \
+    {                                                                                                                  \
+        Error __err = __error;                                                                                         \
+        if (__err.exitCode != ecSuccess)                                                                               \
+        {                                                                                                              \
+            HandleError(__err);                                                                                        \
+            SHUTDOWN(__err.exitCode);                                                                                  \
+        }                                                                                                              \
+    }
+
 int main(int argc, char *argv[])
 {
     // TODO SHUTDOWN macro
@@ -15,6 +37,8 @@ int main(int argc, char *argv[])
     Error error = CreateSuccess();
 
     Processor proc = {};
+    int inputfd = 0;
+    size_t inputFileSize = 0;
 
     if (argc != 2)
     {
@@ -23,23 +47,27 @@ int main(int argc, char *argv[])
         return error.exitCode;
     }
 
-    int inputfd = open(argv[1], O_RDONLY);
+    inputfd = open(argv[1], O_RDONLY);
     if (inputfd <= 0)
     {
         error = CreateError(TranslateErrnoCode(errno), argv[0]);
         return error.exitCode;
     }
 
-    size_t inputFileSize = 0;
-    RETURN_EXITCODE_IF_FAIL(GetFileSize(argv[1], &inputFileSize));
+    SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &inputFileSize));
 
-    RETURN_EXITCODE_IF_FAIL(InitializeProcessor(&proc, inputFileSize, 64));
+    SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, inputFileSize, 8));
 
-    RETURN_EXITCODE_IF_FAIL(LoadByteCodeFromBinary(inputfd, inputFileSize, proc.byteCode, inputFileSize));
+    SHUTDOWN_IF_ERROR_FAIL(LoadByteCodeFromBinary(inputfd, inputFileSize, proc.byteCode, inputFileSize));
 
     DumpByte_tArrInHex(proc.byteCode, proc.byteCodeSize);
 
-    FreeProcessorData(&proc);
-    close(inputfd);
-    return error.exitCode;
+    while (!proc.halted)
+    {
+        // STACK_DUMP(proc.stack);
+        // fprintf(stderr, "DEBUG: PC = %lu\n", proc.pc);
+        SHUTDOWN_IF_ERROR_FAIL(RunCommand(&proc, stdin, stdout));
+    }
+
+    SHUTDOWN(error.exitCode);
 }

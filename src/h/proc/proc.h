@@ -3,12 +3,10 @@
 #define PROC_PROC_H
 
 #include "../stack.h"
-#include "../types.h"
-
-typedef int Digit_t;
 
 struct Processor
 {
+    bool halted;
     byte_t *byteCode;
     size_t byteCodeSize;
     unsigned long pc;
@@ -25,6 +23,6 @@ Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, cons
 
 void FreeProcessorData(Processor *const proc);
 
-Error RunCommand(Processor *const proc);
+Error RunCommand(Processor *const proc, FILE *input, FILE *output);
 
 #endif

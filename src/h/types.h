@@ -6,6 +6,7 @@
 
 typedef unsigned char byte_t;
 typedef unsigned InstructionArg_t;
+typedef int Digit_t;
 
 struct Instruction
 {

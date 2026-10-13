@@ -2,6 +2,8 @@
 
 #define STACK_H
 
+#include "types.h"
+#include <cstdio>
 #define USE_CANARY_PROT
 #define USE_HASH_PROT
 
@@ -29,6 +31,7 @@ enum StackErrorCode
     secTopCanaryChanged,
     secBottomCanaryChanged,
     secStackHashChangedUnexpected,
+    secCantPopFromEmptyStack,
 };
 
 struct StackDebugData
@@ -39,7 +42,7 @@ struct StackDebugData
     size_t creationLine;
 };
 
-typedef int StackElem_t; // TODO remove it
+typedef Digit_t StackElem_t; // TODO remove it
 
 struct Stack_t
 {
@@ -98,7 +101,7 @@ Error StackInit(Stack_t *const stk, const size_t capacity ONDEBUG(, StackDebugDa
 
 Error StackPush(Stack_t *const stk, StackElem_t element);
 
-StackElem_t StackPop(Stack_t *const stk, Error *const error);
+Error StackPop(Stack_t *const stk, StackElem_t *const poppedElement);
 
 void StackFreeData(Stack_t *const stk);
 

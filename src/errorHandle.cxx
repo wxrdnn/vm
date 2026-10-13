@@ -95,6 +95,14 @@ Error HandleError(Error error)
         fprintf(stderr, __RED "Error: Cant allocate memory for %s.\n" __RESET, error.context);
         break;
 
+    case ecNotEnoughSpace:
+        fprintf(stderr, __RED "Error: Not enough space for %s.\n" __RESET, error.context);
+        break;
+
+    case ecStackError:
+        fprintf(stderr, __RED "Error: Stack error: %s.\n" __RESET, error.context);
+        break;
+
     case ecUnexpectedFailure:
     default:
         fprintf(stderr, __RED "Error: Unexpected failure.\n" __RESET);

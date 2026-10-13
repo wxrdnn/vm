@@ -26,6 +26,7 @@ enum ExitCode
     ecWrongUsage = 17,
     ecCantAllocateMemory = 18,
     ecNotEnoughSpace = 19,
+    ecStackError = 20,
 };
 
 struct Error
