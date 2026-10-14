@@ -5,11 +5,12 @@
 #include "../errorHandle.h"
 #include "../types.h"
 #include "instTable.h"
+#include <cstdint>
 #include <cstdio>
 
 int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table);
 
-unsigned InstructionNameToHash(const char *const instructionName);
+uint64_t InstructionNameToHash(const char *const instructionName);
 
 Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
                        const int outputFileDescriptor, const InstructionTable *const table);

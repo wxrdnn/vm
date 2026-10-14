@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <cstring>
 
+void _Jump(Processor *const proc);
+
 Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap)
 {
     ASSERT(proc);
@@ -76,6 +78,8 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
 
     Digit_t tmpVar1 = 0;
     Digit_t tmpVar2 = 0;
+    Digit_t *tmpReg = NULL;
+    unsigned tmpAddress = 0;
 
     proc->pc++;
     switch (commandCode)
@@ -87,8 +91,9 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
     case pcPUSH:
         ASSERT(proc->byteCodeSize > proc->pc + sizeof(Digit_t));
         memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+
         RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1));
-        proc->pc += 4;
+        proc->pc += sizeof(Digit_t);
         break;
 
     case pcADD:
@@ -124,10 +129,159 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
         }
         break;
 
+    case pcPUSHr:
+        RETURN_ERROR_IF_FAIL(GetRegisterById(proc->byteCode[proc->pc], proc, &tmpReg));
+        ASSERT(tmpReg);
+        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, *tmpReg));
+        proc->pc += sizeof(Digit_t); // TODO PUSHr arg can fit in 1 byte
+        break;
+
+    case pcPOPr:
+        RETURN_ERROR_IF_FAIL(GetRegisterById(proc->byteCode[proc->pc], proc, &tmpReg));
+        ASSERT(tmpReg);
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, tmpReg));
+        proc->pc += sizeof(Digit_t);
+        break;
+
+    case pcJMP:
+        _Jump(proc);
+        break;
+
+    case pcJA:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 > tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcJAE:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 >= tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcJB:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 < tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcJBE:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 <= tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcJE:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 == tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcJNE:
+        ASSERT(proc->byteCodeSize > proc->pc + 2 * sizeof(Digit_t) + sizeof(unsigned int));
+
+        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+        memcpy(&tmpVar2, proc->byteCode + proc->pc, sizeof(Digit_t));
+        proc->pc += sizeof(Digit_t);
+
+        if (tmpVar1 != tmpVar2)
+        {
+            _Jump(proc);
+        }
+        break;
+
+    case pcPOP:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
+        break;
+
     default:
-        error = CreateError(ecUnexpectedFailure, "unknown processor instruction");
+        char buf[3] = {};
+        snprintf(buf, 3, "%02X", proc->byteCode[proc->pc - 1]);
+        error = CreateError(ecUnknownProcessorInstruction, buf);
         return error;
     }
 
     return error;
+}
+
+Error GetRegisterById(const byte_t id, Processor *const proc, Digit_t **result)
+{
+    ASSERT(proc);
+    Error error = CreateSuccess();
+
+    switch (id)
+    {
+    case 0x0:
+        *result = &proc->regA;
+        break;
+
+    case 0x1:
+        *result = &proc->regB;
+        break;
+
+    case 0x2:
+        *result = &proc->regC;
+        break;
+
+    case 0x3:
+        *result = &proc->regD;
+        break;
+
+    default:
+        char buf[3] = {};
+        snprintf(buf, 3, "%02X", id);
+        error = CreateError(ecUnknownRegisterId, buf);
+        return error;
+    }
+    return error;
+}
+
+void _Jump(Processor *const proc)
+{
+    ASSERT(proc->byteCodeSize > proc->pc + sizeof(unsigned int));
+
+    unsigned tmpAddress = 0;
+    memcpy(&tmpAddress, proc->byteCode + proc->pc, sizeof(unsigned int));
+    proc->pc = tmpAddress;
 }

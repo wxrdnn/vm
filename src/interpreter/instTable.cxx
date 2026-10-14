@@ -1,5 +1,6 @@
 #include "../h/interpreter/instTable.h"
 #include "../h/debug.h"
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 
@@ -20,7 +21,7 @@ Error CreateInstructionTable(const size_t size, InstructionTable *const tablePtr
     return error;
 }
 
-InstructionNode *GetInstruction(const InstructionTable *const table, const unsigned hash)
+InstructionNode *GetInstruction(const InstructionTable *const table, const uint64_t hash)
 {
     ASSERT(table);
 
@@ -56,7 +57,7 @@ InstructionNode *GetInstruction(const InstructionTable *const table, const unsig
     return NULL;
 }
 
-Error AddInstruction(InstructionTable *const table, const unsigned hash, const byte_t code)
+Error AddInstruction(InstructionTable *const table, const uint64_t hash, const byte_t code)
 {
     ASSERT(table);
 
@@ -66,7 +67,7 @@ Error AddInstruction(InstructionTable *const table, const unsigned hash, const b
     InstructionNode *nodeFound = GetInstruction(table, hash);
     if (nodeFound)
     {
-        printf("DEBUG: Instruction with hash <0x%x> already exists with code %u.", hash, nodeFound->code);
+        printf("DEBUG: Instruction with hash <0x%lx> already exists with code %u.", hash, nodeFound->code);
         return error;
     }
 
@@ -118,30 +119,30 @@ void DestroyInstructionTable(InstructionTable *const tablePtr)
     return;
 }
 
-InstructionNode *FindTailNode(const InstructionNode *const start)
+InstructionNode *FindTailNode(InstructionNode *const start)
 {
     ASSERT(start);
 
-    const InstructionNode *tailNode = start;
+    InstructionNode *tailNode = start;
     while (tailNode->next != NULL)
     {
         tailNode = tailNode->next;
     }
 
-    return (InstructionNode *)tailNode;
+    return tailNode;
 }
 
-InstructionNode *FindFirstBeforeTailNode(const InstructionNode *const start)
+InstructionNode *FindFirstBeforeTailNode(InstructionNode *const start)
 {
     ASSERT(start);
     ASSERT(start->next);
 
-    const InstructionNode *beforeTailNode = start;
+    InstructionNode *beforeTailNode = start;
 
     while (beforeTailNode->next->next != NULL)
     {
         beforeTailNode = beforeTailNode->next;
     }
 
-    return (InstructionNode *)beforeTailNode;
+    return beforeTailNode;
 }

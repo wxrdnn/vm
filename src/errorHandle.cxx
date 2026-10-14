@@ -105,7 +105,14 @@ Error HandleError(Error error)
 
     case ecUnexpectedFailure:
     default:
-        fprintf(stderr, __RED "Error: Unexpected failure.\n" __RESET);
+        if (*error.context != '\0')
+        {
+            fprintf(stderr, __RED "Error: Unexpected failure: %s.\n" __RESET, error.context);
+        }
+        else
+        {
+            fprintf(stderr, __RED "Error: Unexpected failure.\n" __RESET);
+        }
         break;
     }
     return error;

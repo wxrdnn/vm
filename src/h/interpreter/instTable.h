@@ -5,11 +5,12 @@
 #include "../constants.h"
 #include "../errorHandle.h"
 #include "../types.h"
+#include <cstdint>
 
 struct InstructionNode
 {
     InstructionNode *next;
-    unsigned hash;
+    uint64_t hash;
     byte_t code;
 };
 
@@ -21,14 +22,14 @@ struct InstructionTable
 
 Error CreateInstructionTable(const size_t size, InstructionTable *const tablePtr);
 
-InstructionNode *GetInstruction(const InstructionTable *const table, const unsigned hash);
+InstructionNode *GetInstruction(const InstructionTable *const table, const uint64_t hash);
 
-Error AddInstruction(InstructionTable *const tablePtr, const unsigned hash, const byte_t code);
+Error AddInstruction(InstructionTable *const tablePtr, const uint64_t hash, const byte_t code);
 
 void DestroyInstructionTable(InstructionTable *const tablePtr);
 
-InstructionNode *FindTailNode(const InstructionNode *const start);
+InstructionNode *FindTailNode(InstructionNode *const start);
 
-InstructionNode *FindFirstBeforeTailNode(const InstructionNode *const start);
+InstructionNode *FindFirstBeforeTailNode(InstructionNode *const start);
 
 #endif

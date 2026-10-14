@@ -5,6 +5,7 @@
 #include "../h/utils.h"
 #include <cassert>
 #include <cerrno>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -17,7 +18,8 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
     char instName[cMaxLine] = {};
 
     fprintf(stderr, __YELLOW "DEBUG: GetCommandFromLine(): Got line <%s>\n" __RESET, line);
-    int itemsParsed = sscanf(line, "%4s %u", instName, &inst->args[0]); // FIXME HARDCODED!!!
+    int itemsParsed =
+        sscanf(line, "%8s %u %u %u", instName, &inst->args[0], &inst->args[1], &inst->args[2]); // FIXME HARDCODED!!!
 
     if (*instName == '\0')
     {
@@ -35,10 +37,10 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
     return itemsParsed;
 }
 
-unsigned InstructionNameToHash(const char *const instructionName)
+uint64_t InstructionNameToHash(const char *const instructionName)
 {
     ASSERT(instructionName);
-    const unsigned *p = (const unsigned *)instructionName;
+    const uint64_t *p = (const uint64_t *)instructionName;
     return *p;
 }
 
@@ -68,7 +70,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
         {
             return error;
         }
-        if (itemsParsed != inst.argsAmount + 1)
+        if ((unsigned)itemsParsed != inst.argsAmount + 1)
         {
             error.exitCode = ecParsingFailed;
             fprintf(stderr,

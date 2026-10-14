@@ -26,7 +26,10 @@ enum ExitCode
     ecWrongUsage = 17,
     ecCantAllocateMemory = 18,
     ecNotEnoughSpace = 19,
+    // Local for this project
     ecStackError = 20,
+    ecUnknownProcessorInstruction = 21,
+    ecUnknownRegisterId = 22,
 };
 
 struct Error

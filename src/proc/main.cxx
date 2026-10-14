@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 
     DumpByte_tArrInHex(proc.byteCode, proc.byteCodeSize);
 
-    while (!proc.halted)
+    while (!proc.halted && (proc.pc < proc.byteCodeSize))
     {
         // STACK_DUMP(proc.stack);
         // fprintf(stderr, "DEBUG: PC = %lu\n", proc.pc);

@@ -22,6 +22,7 @@ enum ProcessorCommand
     pcJNE = 0xF,
     pcCALL = 0x10,
     pcRET = 0x11,
+    pcPOP = 0x12,
 };
 
 #endif

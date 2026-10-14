@@ -9,7 +9,7 @@ struct Processor
     bool halted;
     byte_t *byteCode;
     size_t byteCodeSize;
-    unsigned long pc;
+    size_t pc;
 
     Stack_t *stack;
 
@@ -24,5 +24,7 @@ Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, cons
 void FreeProcessorData(Processor *const proc);
 
 Error RunCommand(Processor *const proc, FILE *input, FILE *output);
+
+Error GetRegisterById(const byte_t id, Processor *const proc, Digit_t **result);
 
 #endif

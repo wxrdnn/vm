@@ -3,7 +3,6 @@
 #include "../h/errorHandle.h"
 #include "../h/interpreter/instTable.h"
 #include "../h/interpreter/interpreter.h"
-#include "../h/utils.h"
 #include <assert.h>
 #include <cerrno>
 #include <fcntl.h>
@@ -48,7 +47,7 @@ Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *co
         char nameRead[cMaxInstructionNameLength + 1] = {};
         unsigned codeRead = 0;
 
-        int itemsRead = sscanf(buf, "%4s %X", nameRead, &codeRead); // FIXME HARDOCDED
+        int itemsRead = sscanf(buf, "%8s %X", nameRead, &codeRead); // FIXME HARDOCDED
         if (itemsRead != 2 && *buf != '\0')
         {
             fprintf(stderr,
@@ -62,7 +61,7 @@ Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *co
             return error;
         }
 
-        error = AddInstruction(table, InstructionNameToHash(nameRead), codeRead);
+        error = AddInstruction(table, InstructionNameToHash(nameRead), (byte_t)codeRead);
         if (IsFail(&error))
         {
             return error;
