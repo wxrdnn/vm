@@ -11,15 +11,33 @@
 #include <cstring>
 #include <unistd.h>
 
-int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table)
+Error CreateLableTable(LableTable *const lableTable, const size_t initSize)
+{
+    ASSERT(lableTable);
+    Error error = CreateSuccess();
+
+    lableTable->data = (size_t *)calloc(initSize, sizeof(size_t));
+    if (!lableTable)
+    {
+        error = CreateError(ecCantAllocateMemory, "labelTable");
+        return error;
+    }
+
+    lableTable->size = initSize;
+
+    return error;
+}
+
+int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table,
+                       const LableTable *const lableTable, size_t *const processCount)
 {
     ASSERT(line);
 
-    char instName[cMaxLine] = {};
+    char instName[cMaxInstructionNameLength + 1] = {};
 
     fprintf(stderr, __YELLOW "DEBUG: GetCommandFromLine(): Got line <%s>\n" __RESET, line);
     int itemsParsed =
-        sscanf(line, "%8s %u %u %u", instName, &inst->args[0], &inst->args[1], &inst->args[2]); // FIXME HARDCODED!!!
+        sscanf(line, "%8s %X %X %X", instName, &inst->args[0], &inst->args[1], &inst->args[2]); // FIXME HARDCODED!!!
 
     if (*instName == '\0')
     {
@@ -34,6 +52,7 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
 
     inst->argsAmount = (unsigned)(itemsParsed - 1);
     inst->code = foundInstruction->code;
+    *processCount += sizeof(byte_t) + sizeof(unsigned) * inst->argsAmount;
     return itemsParsed;
 }
 
@@ -45,7 +64,8 @@ uint64_t InstructionNameToHash(const char *const instructionName)
 }
 
 Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
-                       const int outputFileDescriptor, const InstructionTable *const table)
+                       const int outputFileDescriptor, const InstructionTable *const instTable,
+                       LableTable *const lableTable)
 {
     ASSERT(inputBuf);
     ASSERT(inputFileName);
@@ -55,17 +75,45 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
     const char *nextLinePos = inputBuf;
     size_t lineCount = 1;
     Instruction inst = {};
+    size_t processCount = 0;
+
+    const char *bufToReadFrom = NULL;
+    char *buf = NULL;
+    bool freeBuf = false;
 
     while ((unsigned)(nextLinePos - inputBuf) < inputBufSize - 1)
     {
-        nextLinePos = prevLinePos + strlen(prevLinePos);
+        size_t prevLinePosLen = strlen(prevLinePos);
+        nextLinePos = prevLinePos + prevLinePosLen;
+
         // fprintf(stderr,
         //         "DEBUG: lineCount: %lu, (nextLinePos - textBuf) = %ld, textBufSize = %lu.\n",
         //         indexBuf->lineCount,
         //         nextLinePos - textBuf,
         //         textBufSize);
 
-        int itemsParsed = GetCommandFromLine(prevLinePos, &inst, table);
+        if (*prevLinePos == ':')
+        {
+            AddLableToTable(prevLinePos, lableTable, processCount);
+            prevLinePos = nextLinePos + 1;
+            lineCount++;
+            continue;
+        }
+        else if (strchr(prevLinePos, ':'))
+        {
+            size_t bufSize = prevLinePosLen + 1 + cMaxInstructionArgs * sizeof(size_t) * 2;
+            buf = (char *)calloc(bufSize, sizeof(char));
+            ProcessLineWithLables(buf, bufSize, prevLinePos, prevLinePosLen, lableTable);
+            fprintf(stderr, "DEBUB: line <%s> after processing lable: <%s>\n", prevLinePos, buf);
+            bufToReadFrom = buf;
+            freeBuf = true;
+        }
+        else
+        {
+            bufToReadFrom = prevLinePos;
+        }
+
+        int itemsParsed = GetCommandFromLine(bufToReadFrom, &inst, instTable, lableTable, &processCount);
         if (itemsParsed == EOF)
         {
             return error;
@@ -78,14 +126,14 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
                     prevLinePos,
                     inputFileName,
                     lineCount);
-            strncpy(error.context, prevLinePos, cMaxLine - 1);
+            strncpy(error.context, bufToReadFrom, cMaxLine - 1);
             return error;
         }
 
         // fprintf(stderr, __YELLOW "DEBUG: prevLinePos = <%s>, first char = <%d>\n" __RESET, prevLinePos,
         // *prevLinePos);
 
-        if (*prevLinePos != '\0')
+        if (*bufToReadFrom != '\0')
         {
             error = WriteInstructionToFile(&inst, outputFileDescriptor);
             if (IsFail(&error))
@@ -99,6 +147,10 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
         // fprintf(stderr, "DEBUG: string after prevLinePos: <%s>", prevLinePos);
     }
 
+    if (freeBuf)
+    {
+        free(buf);
+    }
     return error;
 }
 
@@ -154,6 +206,41 @@ Error DumpInstructionToFile(const Instruction *const inst, const int fd)
     return error;
 }
 
+void DestroyLableTable(LableTable *const lableTable)
+{
+    ASSERT(lableTable);
+
+    free(lableTable->data);
+    return;
+}
+
+Error AddLableToTable(const char *const line, LableTable *const lableTable, const size_t processCount)
+{
+    ASSERT(line);
+    ASSERT(lableTable);
+
+    Error error = CreateSuccess();
+    unsigned labelIndex = 0;
+
+    int itemsParsed = sscanf(line, ":%u", &labelIndex);
+    if (itemsParsed == 1)
+    {
+        if (labelIndex > lableTable->size)
+        {
+            error.exitCode = ecWrongLable;
+        }
+        lableTable->data[labelIndex] = processCount;
+    }
+    else
+    {
+        error.exitCode = ecParsingFailed;
+        strncpy(error.context, line, cMaxLine - 1);
+        return error;
+    }
+
+    return error;
+}
+
 // void DumpInstruction(const Instruction *const inst)
 // {
 //     ASSERT(inst);
@@ -162,3 +249,55 @@ Error DumpInstructionToFile(const Instruction *const inst, const int fd)
 //
 //     return;
 // }
+
+Error ProcessLineWithLables(char *const buf, const size_t bufSize, const char *prevLinePos, const size_t prevLinePosLen,
+                            const LableTable *const lableTable)
+{
+    ASSERT(buf);
+    ASSERT(prevLinePos);
+
+    Error error = CreateSuccess();
+
+    if (!buf)
+    {
+        error = CreateError(ecCantAllocateMemory, "buffer");
+        return error;
+    }
+
+    const char *fastP = strchr(prevLinePos, ':');
+    const char *slowP = prevLinePos;
+    char *bufP = buf;
+    while (fastP != NULL && fastP < prevLinePos + prevLinePosLen && slowP < prevLinePos + prevLinePosLen)
+    {
+        ASSERT(fastP > slowP);
+        ASSERT(bufP < buf + bufSize);
+        memcpy(bufP, slowP, (fastP - slowP) * sizeof(char));
+        bufP += fastP - slowP;
+        // fprintf(
+        //     stderr, "DEBUG: In ProcessLineWithLables: copied first %ld bytes of <%s> to bufP\n", fastP - slowP,
+        //     slowP);
+
+        unsigned index = 0;
+        int itemsParsed = sscanf(fastP, ":%u", &index);
+        if (itemsParsed != 1)
+        {
+            error.exitCode = ecParsingFailed;
+            strncpy(error.context, prevLinePos, cMaxLine - 1);
+            return error;
+        }
+
+        sprintf(bufP, "%lX", lableTable->data[index]);
+        bufP += strlen(bufP);
+
+        slowP = fastP;
+        while (slowP < prevLinePos + prevLinePosLen && *slowP != ' ' && *slowP != '\0')
+        {
+            slowP++;
+        }
+
+        fastP = strchr(slowP, ':');
+    }
+
+    strncpy(bufP, slowP, bufSize - (bufP - buf));
+    return error;
+}

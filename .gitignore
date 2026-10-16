@@ -1,3 +1,7 @@
+interpreter
+processor
+
 output
 test
+testReg
 *.out

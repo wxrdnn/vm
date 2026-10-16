@@ -30,6 +30,7 @@ enum ExitCode
     ecStackError = 20,
     ecUnknownProcessorInstruction = 21,
     ecUnknownRegisterId = 22,
+    ecWrongLable = 23,
 };
 
 struct Error

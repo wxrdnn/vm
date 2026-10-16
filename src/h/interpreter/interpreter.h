@@ -8,16 +8,33 @@
 #include <cstdint>
 #include <cstdio>
 
-int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table);
+struct LableTable
+{
+    size_t *data;
+    size_t size;
+};
+
+Error CreateLableTable(LableTable *const lableTable, const size_t initSize);
+
+int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table,
+                       const LableTable *const lableTable, size_t *const processCount);
 
 uint64_t InstructionNameToHash(const char *const instructionName);
 
 Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
-                       const int outputFileDescriptor, const InstructionTable *const table);
+                       const int outputFileDescriptor, const InstructionTable *const instTable,
+                       LableTable *const lableTable);
 
 Error WriteInstructionToFile(const Instruction *const inst, const int fd);
 
 Error DumpInstructionToFile(const Instruction *const inst, const int fd);
+
+void DestroyLableTable(LableTable *const lableTable);
+
+Error AddLableToTable(const char *const line, LableTable *const lableTable, const size_t processCount);
+
+Error ProcessLineWithLables(char *const buf, const size_t bufSize, const char *prevLinePos, const size_t prevLinePosLen,
+                            const LableTable *const lableTable);
 
 // void DumpInstruction(const Instruction *const inst);
 

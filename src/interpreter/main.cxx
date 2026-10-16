@@ -12,9 +12,13 @@
 
 #define SHUTDOWN(__exitCode)                                                                                           \
     {                                                                                                                  \
-        if (table.data)                                                                                                \
+        if (instTable.data)                                                                                            \
         {                                                                                                              \
-            DestroyInstructionTable(&table);                                                                           \
+            DestroyInstructionTable(&instTable);                                                                       \
+        }                                                                                                              \
+        if (lableTable.data)                                                                                           \
+        {                                                                                                              \
+            DestroyLableTable(&lableTable);                                                                            \
         }                                                                                                              \
         if (inputFileDescriptor)                                                                                       \
         {                                                                                                              \
@@ -46,13 +50,16 @@ int main(int argc, char *argv[])
     // TODO 8 BYTE
     Error error = CreateSuccess();
 
-    InstructionTable table = {};
+    InstructionTable instTable = {};
+    LableTable lableTable = {};
     int inputFileDescriptor = open(argv[1], O_RDONLY);
     size_t inputFileSize = 0;
     int outputFileDescriptor = creat("output", 0644);
     char *textBuf = NULL;
 
-    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(CreateInstructionTable(1, &table)));
+    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(CreateInstructionTable(1, &instTable)));
+
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(CreateLableTable(&lableTable, 64)));
 
     // fprintf(stderr,
     //         "DEBUG: main(): code of instruction <ADD>: %u\n",
@@ -64,7 +71,7 @@ int main(int argc, char *argv[])
         SHUTDOWN(ecWrongUsage);
     }
 
-    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(LoadInstrucitonTableFromFile(&table, argv[2])));
+    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(LoadInstrucitonTableFromFile(&instTable, argv[2])));
 
     // fprintf(stderr, "DEBUG: Input file descriptor: %d\n", inputFileDescriptor);
     if (inputFileDescriptor < 0)
@@ -85,8 +92,13 @@ int main(int argc, char *argv[])
     }
 
     SHUTDOWN_IF_ERROR_FAIL(HandleError(error = LoadText(inputFileDescriptor, textBuf, inputFileSize)));
+
+    // Assembly in 2 iterations
     SHUTDOWN_IF_ERROR_FAIL(
-        HandleError(error = CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &table)));
+        HandleError(CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &instTable, &lableTable)));
+    outputFileDescriptor = creat("output", 0644);
+    SHUTDOWN_IF_ERROR_FAIL(
+        HandleError(CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &instTable, &lableTable)));
 
     SHUTDOWN(ecSuccess);
 }
