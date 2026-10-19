@@ -14,6 +14,18 @@ struct LableTable
     size_t size;
 };
 
+struct AssemblyContext
+{
+    char *inputBuf;
+    size_t inputBufSize;
+    char *inputFileNameForDebug;
+
+    InstructionTable *instTable;
+    LableTable *lableTable;
+
+    int outputFileDescriptor;
+};
+
 Error CreateLableTable(LableTable *const lableTable, const size_t initSize);
 
 int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table,
@@ -21,9 +33,7 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
 
 uint64_t InstructionNameToHash(const char *const instructionName);
 
-Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
-                       const int outputFileDescriptor, const InstructionTable *const instTable,
-                       LableTable *const lableTable);
+Error CompileAssembler(AssemblyContext *const ctx);
 
 Error WriteInstructionToFile(const Instruction *const inst, const int fd);
 

@@ -12,25 +12,25 @@
 
 #define SHUTDOWN(__exitCode)                                                                                           \
     {                                                                                                                  \
-        if (instTable.data)                                                                                            \
+        if (ctx.instTable->data)                                                                                       \
         {                                                                                                              \
-            DestroyInstructionTable(&instTable);                                                                       \
+            DestroyInstructionTable(ctx.instTable);                                                                    \
         }                                                                                                              \
-        if (lableTable.data)                                                                                           \
+        if (ctx.lableTable->data)                                                                                      \
         {                                                                                                              \
-            DestroyLableTable(&lableTable);                                                                            \
+            DestroyLableTable(ctx.lableTable);                                                                         \
         }                                                                                                              \
         if (inputFileDescriptor)                                                                                       \
         {                                                                                                              \
             close(inputFileDescriptor);                                                                                \
         }                                                                                                              \
-        if (outputFileDescriptor)                                                                                      \
+        if (ctx.outputFileDescriptor)                                                                                  \
         {                                                                                                              \
-            close(outputFileDescriptor);                                                                               \
+            close(ctx.outputFileDescriptor);                                                                           \
         }                                                                                                              \
-        if (textBuf)                                                                                                   \
+        if (ctx.inputBuf)                                                                                              \
         {                                                                                                              \
-            free(textBuf);                                                                                             \
+            free(ctx.inputBuf);                                                                                        \
         }                                                                                                              \
                                                                                                                        \
         return __exitCode;                                                                                             \
@@ -48,16 +48,28 @@
 int main(int argc, char *argv[])
 {
     // TODO 8 BYTE
+    // TODO comments
+    // TODO массив структур с кодом комманды, именем и указателем на функций
     Error error = CreateSuccess();
 
     InstructionTable instTable = {};
     LableTable lableTable = {};
     int inputFileDescriptor = open(argv[1], O_RDONLY);
-    size_t inputFileSize = 0;
-    int outputFileDescriptor = creat("output", 0644);
-    char *textBuf = NULL;
 
-    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(CreateInstructionTable(1, &instTable)));
+    // int preProcFileDescriptor = creat("preproc", 0644);
+    int preProcFileDescriptor = open("/dev/null", O_RDWR);
+    int outputFileDescriptor = creat("output", 0644);
+
+    AssemblyContext ctx = {
+        .inputBuf = NULL,
+        .inputBufSize = 0,
+        .inputFileNameForDebug = argv[1],
+        .instTable = &instTable,
+        .lableTable = &lableTable,
+        .outputFileDescriptor = 0,
+    };
+
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(CreateInstructionTable(1, ctx.instTable)));
 
     SHUTDOWN_IF_ERROR_FAIL(HandleError(CreateLableTable(&lableTable, 64)));
 
@@ -71,7 +83,7 @@ int main(int argc, char *argv[])
         SHUTDOWN(ecWrongUsage);
     }
 
-    SHUTDOWN_IF_ERROR_FAIL(error = HandleError(LoadInstrucitonTableFromFile(&instTable, argv[2])));
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(LoadInstrucitonTableFromFile(&instTable, argv[2])));
 
     // fprintf(stderr, "DEBUG: Input file descriptor: %d\n", inputFileDescriptor);
     if (inputFileDescriptor < 0)
@@ -80,25 +92,30 @@ int main(int argc, char *argv[])
         SHUTDOWN(HandleError(error).exitCode);
     }
 
-    SHUTDOWN_IF_ERROR_FAIL(error = GetFileSize(argv[1], &inputFileSize));
+    SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &ctx.inputBufSize));
     // printf("DEBUG: Input file size: %lu\n", inputFileSize);
 
-    SHUTDOWN_IF_ERROR_FAIL(error = CreateTextBuf(inputFileSize, &textBuf));
+    SHUTDOWN_IF_ERROR_FAIL(CreateTextBuf(ctx.inputBufSize, &ctx.inputBuf));
 
+    if (preProcFileDescriptor < 0)
+    {
+        error = CreateError(TranslateErrnoCode(errno), "preproc");
+        return HandleError(error).exitCode;
+    }
     if (outputFileDescriptor < 0)
     {
         error = CreateError(TranslateErrnoCode(errno), "output");
         return HandleError(error).exitCode;
     }
 
-    SHUTDOWN_IF_ERROR_FAIL(HandleError(error = LoadText(inputFileDescriptor, textBuf, inputFileSize)));
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(LoadText(inputFileDescriptor, ctx.inputBuf, ctx.inputBufSize)));
 
     // Assembly in 2 iterations
-    SHUTDOWN_IF_ERROR_FAIL(
-        HandleError(CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &instTable, &lableTable)));
-    outputFileDescriptor = creat("output", 0644);
-    SHUTDOWN_IF_ERROR_FAIL(
-        HandleError(CompileAssembler(textBuf, argv[1], inputFileSize, outputFileDescriptor, &instTable, &lableTable)));
+    ctx.outputFileDescriptor = preProcFileDescriptor;
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(CompileAssembler(&ctx)));
+
+    ctx.outputFileDescriptor = outputFileDescriptor;
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(CompileAssembler(&ctx)));
 
     SHUTDOWN(ecSuccess);
 }

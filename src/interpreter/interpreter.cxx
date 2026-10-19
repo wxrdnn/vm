@@ -59,20 +59,20 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
 uint64_t InstructionNameToHash(const char *const instructionName)
 {
     ASSERT(instructionName);
+
     const uint64_t *p = (const uint64_t *)instructionName;
     return *p;
 }
 
-Error CompileAssembler(const char *const inputBuf, const char *inputFileName, size_t inputBufSize,
-                       const int outputFileDescriptor, const InstructionTable *const instTable,
-                       LableTable *const lableTable)
+Error CompileAssembler(AssemblyContext *const ctx)
 {
-    ASSERT(inputBuf);
-    ASSERT(inputFileName);
+    ASSERT(ctx);
+    ASSERT(ctx->inputBuf);
+    ASSERT(ctx->inputFileNameForDebug);
 
     Error error = CreateSuccess();
-    const char *prevLinePos = inputBuf;
-    const char *nextLinePos = inputBuf;
+    const char *prevLinePos = ctx->inputBuf;
+    const char *nextLinePos = ctx->inputBuf;
     size_t lineCount = 1;
     Instruction inst = {};
     size_t processCount = 0;
@@ -81,7 +81,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
     char *buf = NULL;
     bool freeBuf = false;
 
-    while ((unsigned)(nextLinePos - inputBuf) < inputBufSize - 1)
+    while ((unsigned)(nextLinePos - ctx->inputBuf) < ctx->inputBufSize - 1)
     {
         size_t prevLinePosLen = strlen(prevLinePos);
         nextLinePos = prevLinePos + prevLinePosLen;
@@ -94,7 +94,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
 
         if (*prevLinePos == ':')
         {
-            AddLableToTable(prevLinePos, lableTable, processCount);
+            AddLableToTable(prevLinePos, ctx->lableTable, processCount);
             prevLinePos = nextLinePos + 1;
             lineCount++;
             continue;
@@ -103,7 +103,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
         {
             size_t bufSize = prevLinePosLen + 1 + cMaxInstructionArgs * sizeof(size_t) * 2;
             buf = (char *)calloc(bufSize, sizeof(char));
-            ProcessLineWithLables(buf, bufSize, prevLinePos, prevLinePosLen, lableTable);
+            ProcessLineWithLables(buf, bufSize, prevLinePos, prevLinePosLen, ctx->lableTable);
             fprintf(stderr, "DEBUB: line <%s> after processing lable: <%s>\n", prevLinePos, buf);
             bufToReadFrom = buf;
             freeBuf = true;
@@ -113,7 +113,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
             bufToReadFrom = prevLinePos;
         }
 
-        int itemsParsed = GetCommandFromLine(bufToReadFrom, &inst, instTable, lableTable, &processCount);
+        int itemsParsed = GetCommandFromLine(bufToReadFrom, &inst, ctx->instTable, ctx->lableTable, &processCount);
         if (itemsParsed == EOF)
         {
             return error;
@@ -124,7 +124,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
             fprintf(stderr,
                     __RED "ERROR: Failed to parse \"%s\" at %s:%lu.\n" __RESET,
                     prevLinePos,
-                    inputFileName,
+                    ctx->inputFileNameForDebug,
                     lineCount);
             strncpy(error.context, bufToReadFrom, cMaxLine - 1);
             return error;
@@ -135,7 +135,7 @@ Error CompileAssembler(const char *const inputBuf, const char *inputFileName, si
 
         if (*bufToReadFrom != '\0')
         {
-            error = WriteInstructionToFile(&inst, outputFileDescriptor);
+            error = WriteInstructionToFile(&inst, ctx->outputFileDescriptor);
             if (IsFail(&error))
             {
                 return error;
