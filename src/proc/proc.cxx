@@ -1,5 +1,5 @@
 #include "../h/proc/proc.h"
-#include "../h/proc/instructions.h"
+#include "../h/commandCodes.h"
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
@@ -114,22 +114,8 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
     proc->pc++;
     switch (commandCode)
     {
-    case pcHLT:
-        proc->halted = true;
-        break;
-
-    case pcPUSH:
-        ASSERT(proc->byteCodeSize > proc->pc + sizeof(Digit_t));
-        memcpy(&tmpVar1, proc->byteCode + proc->pc, sizeof(Digit_t));
-
-        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1));
-        proc->pc += sizeof(Digit_t);
-        break;
 
     case pcADD:
-        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar1));
-        RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar2));
-        RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar1 + tmpVar2));
         break;
 
     case pcSUB:

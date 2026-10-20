@@ -31,8 +31,6 @@ Error CreateLableTable(LableTable *const lableTable, const size_t initSize);
 int GetCommandFromLine(const char *const line, Instruction *const inst, const InstructionTable *const table,
                        const LableTable *const lableTable, size_t *const processCount);
 
-uint64_t InstructionNameToHash(const char *const instructionName);
-
 Error CompileAssembler(AssemblyContext *const ctx);
 
 Error WriteInstructionToFile(const Instruction *const inst, const int fd);

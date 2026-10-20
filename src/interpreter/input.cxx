@@ -20,56 +20,56 @@ char *ReadLine(char *buf, const size_t bufSize, FILE *inputFile)
     return fgets(buf, (int)(bufSize - 1), inputFile);
 }
 
-Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *const filePath)
-{
-    ASSERT(table);
-    ASSERT(table->data);
-    ASSERT(filePath);
-
-    Error error = CreateSuccess();
-
-    FILE *fp = fopen(filePath, "r");
-    if (!fp)
-    {
-        error = CreateError(TranslateErrnoCode(errno), filePath);
-    }
-
-    char buf[cMaxLine] = {};
-    unsigned lineCount = 1;
-    while (fgets(buf, cMaxLine - 1, fp))
-    {
-        if (*buf == '/' && *(buf + 1) == '/')
-        {
-            lineCount++;
-            continue;
-        }
-
-        char nameRead[cMaxInstructionNameLength + 1] = {};
-        unsigned codeRead = 0;
-
-        int itemsRead = sscanf(buf, "%8s %X", nameRead, &codeRead); // FIXME HARDOCDED
-        if (itemsRead != 2 && *buf != '\0')
-        {
-            fprintf(stderr,
-                    __RED "ERROR: Failed to parse instruction \"%s\" from %s:%u. Items read = %d, expected: "
-                          "<INSTRUCTION> <CODE>\n" __RESET,
-                    buf,
-                    filePath,
-                    lineCount,
-                    itemsRead);
-            error = CreateError(ecParsingFailed, buf);
-            return error;
-        }
-
-        error = AddInstruction(table, InstructionNameToHash(nameRead), (byte_t)codeRead);
-        if (IsFail(&error))
-        {
-            return error;
-        }
-
-        lineCount++;
-    }
-
-    fclose(fp);
-    return error;
-}
+// Error LoadInstrucitonTableFromFile(InstructionTable *const table, const char *const filePath)
+// {
+//     ASSERT(table);
+//     ASSERT(table->data);
+//     ASSERT(filePath);
+//
+//     Error error = CreateSuccess();
+//
+//     FILE *fp = fopen(filePath, "r");
+//     if (!fp)
+//     {
+//         error = CreateError(TranslateErrnoCode(errno), filePath);
+//     }
+//
+//     char buf[cMaxLine] = {};
+//     unsigned lineCount = 1;
+//     while (fgets(buf, cMaxLine - 1, fp))
+//     {
+//         if (*buf == '/' && *(buf + 1) == '/')
+//         {
+//             lineCount++;
+//             continue;
+//         }
+//
+//         char nameRead[cMaxInstructionNameLength + 1] = {};
+//         unsigned codeRead = 0;
+//
+//         int itemsRead = sscanf(buf, "%8s %X", nameRead, &codeRead); // FIXME HARDOCDED
+//         if (itemsRead != 2 && *buf != '\0')
+//         {
+//             fprintf(stderr,
+//                     __RED "ERROR: Failed to parse instruction \"%s\" from %s:%u. Items read = %d, expected: "
+//                           "<INSTRUCTION> <CODE>\n" __RESET,
+//                     buf,
+//                     filePath,
+//                     lineCount,
+//                     itemsRead);
+//             error = CreateError(ecParsingFailed, buf);
+//             return error;
+//         }
+//
+//         error = AddInstruction(table, InstructionNameToHash(nameRead), (byte_t)codeRead);
+//         if (IsFail(&error))
+//         {
+//             return error;
+//         }
+//
+//         lineCount++;
+//     }
+//
+//     fclose(fp);
+//     return error;
+// }

@@ -56,14 +56,6 @@ int GetCommandFromLine(const char *const line, Instruction *const inst, const In
     return itemsParsed;
 }
 
-uint64_t InstructionNameToHash(const char *const instructionName)
-{
-    ASSERT(instructionName);
-
-    const uint64_t *p = (const uint64_t *)instructionName;
-    return *p;
-}
-
 Error CompileAssembler(AssemblyContext *const ctx)
 {
     ASSERT(ctx);
@@ -109,6 +101,7 @@ Error CompileAssembler(AssemblyContext *const ctx)
         else if (strchr(prevLinePos, ':'))
         {
             size_t bufSize = prevLinePosLen + 1 + cMaxInstructionArgs * sizeof(size_t) * 2;
+
             buf = (char *)calloc(bufSize, sizeof(char));
             ProcessLineWithLables(buf, bufSize, prevLinePos, prevLinePosLen, ctx->lableTable);
             fprintf(stderr, "DEBUB: line <%s> after processing lable: <%s>\n", prevLinePos, buf);

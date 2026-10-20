@@ -6,5 +6,6 @@
 const size_t cMaxLine = 64;
 const size_t cMaxInstructionArgs = 4;
 const size_t cMaxInstructionNameLength = 8;
+const size_t cCommandTableSize = 256;
 
 #endif

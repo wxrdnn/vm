@@ -77,13 +77,14 @@ int main(int argc, char *argv[])
     //         "DEBUG: main(): code of instruction <ADD>: %u\n",
     //         GetInstruction(&table, InstructionNameToHash("ADD"))->code);
 
-    if (argc != 3)
+    if (argc != 2)
     {
-        printf(__RED "ERROR: Wrong input.\n" __BLUE "Usage: %s [INPUT] [REFERENCE]\n" __RESET, argv[0]);
+        printf(__RED "ERROR: Wrong input.\n" __BLUE "Usage: %s [INPUT]\n" __RESET, argv[0]);
         SHUTDOWN(ecWrongUsage);
     }
 
-    SHUTDOWN_IF_ERROR_FAIL(HandleError(LoadInstrucitonTableFromFile(&instTable, argv[2])));
+    // SHUTDOWN_IF_ERROR_FAIL(HandleError(LoadInstrucitonTableFromFile(&instTable, argv[2])));
+    SHUTDOWN_IF_ERROR_FAIL(HandleError(LoadInstructionTable(ctx.instTable)));
 
     // fprintf(stderr, "DEBUG: Input file descriptor: %d\n", inputFileDescriptor);
     if (inputFileDescriptor < 0)
