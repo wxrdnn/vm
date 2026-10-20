@@ -17,9 +17,12 @@ struct Processor
     Digit_t regB;
     Digit_t regC;
     Digit_t regD;
+
+    Stack_t *funcStack;
 };
 
-Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap);
+Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap,
+                          const size_t initialFuncStackCap);
 
 void FreeProcessorData(Processor *const proc);
 

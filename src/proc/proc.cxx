@@ -7,7 +7,8 @@
 
 void _Jump(Processor *const proc);
 
-Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap)
+Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, const size_t initialStackCap,
+                          const size_t initialFuncStackCap)
 {
     ASSERT(proc);
     Error error = CreateSuccess();
@@ -49,6 +50,26 @@ Error InitializeProcessor(Processor *const proc, const size_t byteCodeSize, cons
     proc->regC = 0;
     proc->regD = 0;
 
+    proc->funcStack = (Stack_t *)calloc(1, sizeof(Stack_t));
+    if (!proc->funcStack)
+    {
+        error = CreateError(ecCantAllocateMemory, "proc.funcStack");
+        return error;
+    }
+
+    StackDebugData *funcStkDebugData = (StackDebugData *)calloc(1, sizeof(StackDebugData));
+    if (!funcStkDebugData)
+    {
+        error = CreateError(ecCantAllocateMemory, "proc.funcStkDebugData");
+        return error;
+    }
+    funcStkDebugData->creationLine = __LINE__ - 13;
+    funcStkDebugData->creationFile = __FILE__;
+    funcStkDebugData->creationFunction = __FUNCTION__;
+    funcStkDebugData->name = "proc.funcStack";
+
+    RETURN_ERROR_IF_FAIL(StackInit(proc->funcStack, initialFuncStackCap, funcStkDebugData));
+
     return error;
 }
 
@@ -66,6 +87,13 @@ void FreeProcessorData(Processor *const proc)
     free(proc->stack->debugData);
     free(proc->stack);
 
+    ASSERT(proc->funcStack);
+    ASSERT(proc->funcStack->data);
+    ASSERT(proc->funcStack->debugData);
+    StackFreeData(proc->funcStack);
+    free(proc->funcStack->debugData);
+    free(proc->funcStack);
+
     return;
 }
 
@@ -80,6 +108,8 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
     Digit_t tmpVar2 = 0;
     Digit_t *tmpReg = NULL;
     unsigned tmpAddress = 0;
+
+    fprintf(stderr, "DEBUG: Executing %X\n", *(proc->byteCode + proc->pc));
 
     proc->pc++;
     switch (commandCode)
@@ -229,6 +259,20 @@ Error RunCommand(Processor *const proc, FILE *input, FILE *output)
         {
             _Jump(proc);
         }
+        break;
+
+    case pcCALL: // FIXME CANT HANDLE addresses larger than 4 bytes !!!!
+        ASSERT(proc->byteCodeSize > proc->pc + sizeof(unsigned int));
+
+        // memcpy(&tmpAddress, proc->byteCode + proc->pc, sizeof(unsigned int));
+        // fprintf(stderr, "DEBUG: pcCALL: Put address %u in function stack.\n", tmpAddress);
+        RETURN_ERROR_IF_FAIL(StackPush(proc->funcStack, proc->pc + sizeof(unsigned int)));
+        _Jump(proc);
+        break;
+
+    case pcRET:
+        RETURN_ERROR_IF_FAIL(StackPop(proc->funcStack, &tmpVar1));
+        proc->pc = (unsigned int)tmpVar1;
         break;
 
     case pcPOP:

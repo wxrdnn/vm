@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &inputFileSize));
 
-    SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, inputFileSize, 8));
+    SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, inputFileSize, 16, 8));
 
     SHUTDOWN_IF_ERROR_FAIL(LoadByteCodeFromBinary(inputfd, inputFileSize, proc.byteCode, inputFileSize));
 

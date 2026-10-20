@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     // Assembly in 2 iterations
     ctx.outputFileDescriptor = preProcFileDescriptor;
     SHUTDOWN_IF_ERROR_FAIL(HandleError(CompileAssembler(&ctx)));
-
+    fprintf(stderr, "DEBUG: ---------------------------------------\n");
     ctx.outputFileDescriptor = outputFileDescriptor;
     SHUTDOWN_IF_ERROR_FAIL(HandleError(CompileAssembler(&ctx)));
 

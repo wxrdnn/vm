@@ -92,6 +92,13 @@ Error CompileAssembler(AssemblyContext *const ctx)
         //         nextLinePos - textBuf,
         //         textBufSize);
 
+        if (*prevLinePos == '\0')
+        {
+            prevLinePos = nextLinePos + 1;
+            lineCount++;
+            continue;
+        }
+
         if (*prevLinePos == ':')
         {
             AddLableToTable(prevLinePos, ctx->lableTable, processCount);
@@ -106,7 +113,6 @@ Error CompileAssembler(AssemblyContext *const ctx)
             ProcessLineWithLables(buf, bufSize, prevLinePos, prevLinePosLen, ctx->lableTable);
             fprintf(stderr, "DEBUB: line <%s> after processing lable: <%s>\n", prevLinePos, buf);
             bufToReadFrom = buf;
-            freeBuf = true;
         }
         else
         {
