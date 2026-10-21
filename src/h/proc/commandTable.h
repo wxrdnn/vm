@@ -3,14 +3,12 @@
 #define PROC_COMMAND_TABLE_H
 
 #include "../errorHandle.h"
-#include "proc.h"
+#include "../proc/types.h"
 
-typedef Error (*CommandFunc)(Processor *);
+Error InitializeCommandTable(CommandTable *const table);
 
-struct CommandTable
-{
-    CommandFunc *data;
-    size_t size;
-};
+void FreeCommandTableData(CommandTable *const table);
+
+void LoadCommandTable(CommandTable *const table);
 
 #endif

@@ -1,3 +1,4 @@
+#include "../h/proc/commandTable.h"
 #include "../h/proc/input.h"
 #include "../h/proc/output.h"
 #include "../h/proc/proc.h"
@@ -35,6 +36,7 @@ int main(int argc, char *argv[])
     Error error = CreateSuccess();
 
     Processor proc = {};
+    CommandTable table = {};
     int inputfd = 0;
     size_t inputFileSize = 0;
 
@@ -52,6 +54,10 @@ int main(int argc, char *argv[])
         return error.exitCode;
     }
 
+    SHUTDOWN_IF_ERROR_FAIL(InitializeCommandTable(&table));
+
+    LoadCommandTable(&table);
+
     SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &inputFileSize));
 
     SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, inputFileSize, 16, 8));
@@ -64,7 +70,7 @@ int main(int argc, char *argv[])
     {
         // STACK_DUMP(proc.stack);
         // fprintf(stderr, "DEBUG: PC = %lu\n", proc.pc);
-        SHUTDOWN_IF_ERROR_FAIL(RunCommand(&proc, stdin, stdout));
+        SHUTDOWN_IF_ERROR_FAIL(RunCommand(&proc, stdin, stdout, &table));
     }
 
     SHUTDOWN(error.exitCode);

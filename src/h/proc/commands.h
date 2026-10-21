@@ -2,7 +2,7 @@
 
 #define PROC_COMMANDS_H
 
-#include "proc.h"
+#include "types.h"
 
 Error _Halt(Processor *proc);
 

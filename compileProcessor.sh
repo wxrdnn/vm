@@ -10,5 +10,5 @@
      -Wno-old-style-cast -Wno-varargs -Wstack-protector -fcheck-new -fsized-deallocation -fstack-protector -fstrict-overflow \
      -flto-odr-type-merging -fno-omit-frame-pointer -pie -fPIE -Werror=vla \
      -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,leak,nonnull-attribute,null,object-size,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr \
-     src/proc/main.cxx src/proc/input.cxx src/textio.cxx src/errorHandle.cxx src/utils.cxx src/proc/output.cxx src/stack.cxx src/hash.cxx src/proc/proc.cxx \
+     src/proc/main.cxx src/proc/input.cxx src/textio.cxx src/errorHandle.cxx src/utils.cxx src/proc/output.cxx src/stack.cxx src/hash.cxx src/proc/proc.cxx src/proc/commandTable.cxx src/proc/commands.cxx \
      -o processor
