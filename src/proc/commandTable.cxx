@@ -32,21 +32,21 @@ void LoadCommandTable(CommandTable *const table)
 
     table->data[pcHLT] = _Halt;
 
-    table->data[pcPUSHc] = _Pushc;
-    table->data[pcPUSHr] = _Pushr;
-    table->data[pcPUSHm] = _Pushm;
-    table->data[pcPUSHrc] = _Pushrc;
-    table->data[pcPUSHmc] = _Pushmc;
-    table->data[pcPUSHmr] = _Pushmr;
-    table->data[pcPUSHmrc] = _Pushmrc;
+    table->data[pcPUSHc] = _Push;
+    table->data[pcPUSHr] = _Push;
+    // table->data[pcPUSHm] = _Push;
+    table->data[pcPUSHrc] = _Push;
+    table->data[pcPUSHmc] = _Push;
+    table->data[pcPUSHmr] = _Push;
+    table->data[pcPUSHmrc] = _Push;
 
-    table->data[pcPOPc] = _Popc;
-    table->data[pcPOPr] = _Popr;
-    table->data[pcPOPm] = _Popm;
-    table->data[pcPOPrc] = _Poprc;
-    table->data[pcPOPmc] = _Popmc;
-    table->data[pcPOPmr] = _Popmr;
-    table->data[pcPOPmrc] = _Popmrc;
+    table->data[pcPOP] = _Pop;
+    table->data[pcPOPr] = _Pop;
+    // table->data[pcPOPm] = _Pop;
+    // table->data[pcPOPrc] = _Poprc;
+    table->data[pcPOPmc] = _Pop;
+    table->data[pcPOPmr] = _Pop;
+    table->data[pcPOPmrc] = _Pop;
 
     table->data[pcADD] = _Add;
     table->data[pcSUB] = _Sub;

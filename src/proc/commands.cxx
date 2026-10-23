@@ -1,5 +1,7 @@
 #include "../h/proc/commands.h"
+#include "../h/proc/proc.h"
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 
 Error _Halt(Processor *proc)
@@ -10,70 +12,99 @@ Error _Halt(Processor *proc)
     return CreateSuccess();
 }
 
-Error _Pushc(Processor *proc)
+Error _Push(Processor *proc)
 {
     ASSERT(proc);
-    Digit_t tmpVar = 0;
 
-    memcpy(&tmpVar, proc->byteCode + proc->pc, sizeof(Digit_t));
+    Digit_t digitToPush = 0;
 
-    RETURN_ERROR_IF_FAIL(StackPush(proc->stack, tmpVar));
-    proc->pc += sizeof(Digit_t);
+    ASSERT(proc->pc >= 1);
+    byte_t commandCode = proc->byteCode[proc->pc - 1];
 
-    return CreateSuccess();
+    // 8 4 2 1 01
+    // 0 0 0 0 0001
+    // | | |
+    // m r c
+
+    if (commandCode & 0x20)
+    {
+        Digit_t tmpVar = 0;
+        memcpy(&tmpVar, proc->byteCode + proc->pc, sizeof(Digit_t));
+
+        digitToPush += tmpVar;
+        proc->pc += sizeof(Digit_t);
+    }
+    if (commandCode & 0x40)
+    {
+        Digit_t *regPtr = 0;
+        RETURN_ERROR_IF_FAIL(GetRegisterById(proc->byteCode[proc->pc], proc, &regPtr));
+
+        digitToPush += *regPtr;
+        proc->pc += sizeof(Digit_t);
+    }
+    if (commandCode & 0x80)
+    {
+        if (digitToPush < 0 || (unsigned)digitToPush >= proc->ram->size)
+        {
+            char ctx[cMaxLine] = {};
+            snprintf(ctx, cMaxLine - 1, "%d", digitToPush); // FIXME HARDCODED
+            return CreateError(ecRamIndexOutOfRange, ctx);
+        }
+
+        digitToPush = proc->ram->data[digitToPush];
+        proc->pc += sizeof(Digit_t);
+    }
+
+    return StackPush(proc->stack, digitToPush);
 }
 
-Error _Pushr(Processor *proc)
+Error _Pop(Processor *proc)
 {
-    return CreateSuccess();
-}
-Error _Pushm(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Pushrc(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Pushmc(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Pushmr(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Pushmrc(Processor *proc)
-{
-    return CreateSuccess();
-}
+    ASSERT(proc);
 
-Error _Popc(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Popr(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Popm(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Poprc(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Popmc(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Popmr(Processor *proc)
-{
-    return CreateSuccess();
-}
-Error _Popmrc(Processor *proc)
-{
+    Digit_t *addressToPop = proc->ram->data;
+    Digit_t *regAddress = NULL;
+    Digit_t poppedElement = 0;
+
+    ASSERT(proc->pc >= 1);
+    byte_t commandCode = proc->byteCode[proc->pc - 1];
+
+    RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &poppedElement));
+
+    // 8 4 2 1 02
+    // 0 0 0 0 0010
+    // | | |
+    // m r c
+
+    if (commandCode & 0x40)
+    {
+        RETURN_ERROR_IF_FAIL(GetRegisterById(proc->byteCode[proc->pc], proc, &regAddress));
+        proc->pc += sizeof(Digit_t);
+    }
+
+    if (commandCode & 0x80)
+    {
+        if (regAddress)
+        {
+            addressToPop += *regAddress;
+        }
+
+        if (commandCode & 0x20)
+        {
+            Digit_t tmpVar = 0;
+            memcpy(&tmpVar, proc->byteCode + proc->pc, sizeof(Digit_t));
+
+            addressToPop += tmpVar;
+            proc->pc += sizeof(Digit_t);
+        }
+    }
+    else
+    {
+        addressToPop = regAddress;
+    }
+
+    *addressToPop = poppedElement;
+
     return CreateSuccess();
 }
 
@@ -140,7 +171,7 @@ Error _Out(Processor *proc)
     Digit_t tmpVar = 0;
 
     RETURN_ERROR_IF_FAIL(StackPop(proc->stack, &tmpVar));
-    if (fprintf(stdout, "%d\n", tmpVar) < 0) // FIXME hardcoded
+    if (fprintf(proc->outputfp, "%d\n", tmpVar) < 0) // FIXME hardcoded
     {
         return CreateError(TranslateErrnoCode(errno), "output file");
     }
@@ -279,7 +310,7 @@ Error _Call(Processor *proc)
     ASSERT(proc);
     ASSERT(proc->byteCodeSize > proc->pc + sizeof(unsigned int));
 
-    RETURN_ERROR_IF_FAIL(StackPush(proc->funcStack, proc->pc + sizeof(unsigned int)));
+    RETURN_ERROR_IF_FAIL(StackPush(proc->funcStack, (StackElem_t)(proc->pc + sizeof(unsigned int))));
     _Jmp(proc);
 
     return CreateSuccess();

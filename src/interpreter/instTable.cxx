@@ -173,10 +173,10 @@ Error LoadInstructionTable(InstructionTable *const table)
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("PUSHmr\0"), 1, (byte_t)pcPUSHmr));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("PUSHmrc"), 2, (byte_t)pcPUSHmrc));
 
-    RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPc\0\0\0"), 1, (byte_t)pcPOPc));
+    RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POP\0\0\0\0"), 0, (byte_t)pcPOP));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPr\0\0\0"), 1, (byte_t)pcPOPr));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPm\0\0\0"), 1, (byte_t)pcPOPm));
-    RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPrc\0\0"), 2, (byte_t)pcPOPrc));
+    // RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPrc\0\0"), 2, (byte_t)pcPOPrc));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPmc\0\0"), 1, (byte_t)pcPOPmc));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPmr\0\0"), 1, (byte_t)pcPOPmr));
     RETURN_ERROR_IF_FAIL(AddInstruction(table, InstructionNameToHash("POPmrc\0"), 2, (byte_t)pcPOPmrc));

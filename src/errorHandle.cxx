@@ -1,5 +1,6 @@
 #include "h/errorHandle.h"
 #include "h/colors.h"
+#include "h/constants.h"
 #include "h/utils.h"
 #include <cassert>
 #include <errno.h>
@@ -98,9 +99,27 @@ Error HandleError(Error error)
     case ecNotEnoughSpace:
         fprintf(stderr, __RED "Error: Not enough space for %s.\n" __RESET, error.context);
         break;
-
+    // ---------------------
+    // Local for this project
+    // ---------------------
     case ecStackError:
         fprintf(stderr, __RED "Error: Stack error: %s.\n" __RESET, error.context);
+        break;
+
+    case ecUnknownProcessorInstruction:
+        fprintf(stderr, __RED "Error: Unknown processor instruction: %s.\n" __RESET, error.context);
+        break;
+
+    case ecUnknownRegisterId:
+        fprintf(stderr, __RED "Error: Unknown register id: %s.\n" __RESET, error.context);
+        break;
+
+    case ecWrongLable:
+        fprintf(stderr, __RED "Error: Wrong assembly lable: %s.\n" __RESET, error.context);
+        break;
+
+    case ecRamIndexOutOfRange:
+        fprintf(stderr, __RED "Error: Ram index out of range: %s.\n" __RESET, error.context);
         break;
 
     case ecUnexpectedFailure:
@@ -122,8 +141,7 @@ Error CreateError(const ExitCode exitCode, const char *const context)
 {
     Error error = {};
     error.exitCode = exitCode;
-    strcpy(error.context,
-           context ? context : ""); // use empty string if context is null.
+    strncpy(error.context, context ? context : "", cMaxLine - 1); // use empty string if context is null.
     return error;
 }
 

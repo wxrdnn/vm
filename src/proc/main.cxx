@@ -11,9 +11,13 @@
 
 #define SHUTDOWN(__exitCode)                                                                                           \
     {                                                                                                                  \
-        if (inputfd > 0)                                                                                               \
+        if (byteCodefd > 0)                                                                                            \
         {                                                                                                              \
-            close(inputfd);                                                                                            \
+            close(byteCodefd);                                                                                         \
+        }                                                                                                              \
+        if (table.data)                                                                                                \
+        {                                                                                                              \
+            FreeCommandTableData(&table);                                                                              \
         }                                                                                                              \
                                                                                                                        \
         FreeProcessorData(&proc);                                                                                      \
@@ -36,9 +40,19 @@ int main(int argc, char *argv[])
     Error error = CreateSuccess();
 
     Processor proc = {};
+
+    ProcInitData initData = {
+        .byteCodeSize = 0,
+        .stackCap = 32,
+        .funcStackCap = 8,
+        .ramSize = 1024,
+        .inputfp = stdin,
+        .outputfp = stdout,
+    };
+
     CommandTable table = {};
-    int inputfd = 0;
-    size_t inputFileSize = 0;
+
+    int byteCodefd = 0;
 
     if (argc != 2)
     {
@@ -47,8 +61,8 @@ int main(int argc, char *argv[])
         return error.exitCode;
     }
 
-    inputfd = open(argv[1], O_RDONLY);
-    if (inputfd <= 0)
+    byteCodefd = open(argv[1], O_RDONLY);
+    if (byteCodefd <= 0)
     {
         error = CreateError(TranslateErrnoCode(errno), argv[0]);
         return error.exitCode;
@@ -58,11 +72,11 @@ int main(int argc, char *argv[])
 
     LoadCommandTable(&table);
 
-    SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &inputFileSize));
+    SHUTDOWN_IF_ERROR_FAIL(GetFileSize(argv[1], &initData.byteCodeSize));
 
-    SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, inputFileSize, 16, 8));
+    SHUTDOWN_IF_ERROR_FAIL(InitializeProcessor(&proc, &initData));
 
-    SHUTDOWN_IF_ERROR_FAIL(LoadByteCodeFromBinary(inputfd, inputFileSize, proc.byteCode, inputFileSize));
+    SHUTDOWN_IF_ERROR_FAIL(LoadByteCodeFromBinary(byteCodefd, initData.byteCodeSize, proc.byteCode, proc.byteCodeSize));
 
     DumpByte_tArrInHex(proc.byteCode, proc.byteCodeSize);
 
@@ -70,7 +84,7 @@ int main(int argc, char *argv[])
     {
         // STACK_DUMP(proc.stack);
         // fprintf(stderr, "DEBUG: PC = %lu\n", proc.pc);
-        SHUTDOWN_IF_ERROR_FAIL(RunCommand(&proc, stdin, stdout, &table));
+        SHUTDOWN_IF_ERROR_FAIL(RunCommand(&proc, &table));
     }
 
     SHUTDOWN(error.exitCode);

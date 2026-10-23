@@ -31,6 +31,7 @@ enum ExitCode
     ecUnknownProcessorInstruction = 21,
     ecUnknownRegisterId = 22,
     ecWrongLable = 23,
+    ecRamIndexOutOfRange = 24,
 };
 
 struct Error

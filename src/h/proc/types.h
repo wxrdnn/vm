@@ -3,6 +3,13 @@
 #define PROC_TYPES_H
 
 #include "../stack.h"
+#include <cstddef>
+
+struct Ram
+{
+    Digit_t *data;
+    size_t size;
+};
 
 struct Processor
 {
@@ -19,6 +26,11 @@ struct Processor
     Digit_t regD;
 
     Stack_t *funcStack;
+
+    Ram *ram;
+
+    FILE *inputfp;
+    FILE *outputfp;
 };
 
 typedef Error (*CommandFunc)(Processor *);
@@ -27,6 +39,17 @@ struct CommandTable
 {
     CommandFunc *data;
     size_t size;
+};
+
+struct ProcInitData
+{
+    size_t byteCodeSize;
+    size_t stackCap;
+    size_t funcStackCap;
+    size_t ramSize;
+
+    FILE *inputfp;
+    FILE *outputfp;
 };
 
 #endif

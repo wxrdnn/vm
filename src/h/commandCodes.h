@@ -8,16 +8,16 @@ enum ProcessorCommand
 
     pcPUSHc = 0b00100001,
     pcPUSHr = 0b01000001,
-    pcPUSHm = 0b10000001,
+    // pcPUSHm = 0b10000001, // Doesn't make sense
     pcPUSHrc = 0b01100001,
     pcPUSHmc = 0b10100001,
     pcPUSHmr = 0b11000001,
     pcPUSHmrc = 0b11100001,
 
-    pcPOPc = 0b00100010,
+    pcPOP = 0b00000010, // Just delete value from stack
     pcPOPr = 0b01000010,
-    pcPOPm = 0b10000010,
-    pcPOPrc = 0b01100010,
+    // pcPOPm = 0b10000010, // Doesn't make sense
+    // pcPOPrc = 0b01100010, // Doesn't make sense
     pcPOPmc = 0b10100010,
     pcPOPmr = 0b11000010,
     pcPOPmrc = 0b11000010,
